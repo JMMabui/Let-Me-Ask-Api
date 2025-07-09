@@ -5,9 +5,11 @@ import {
   validatorCompiler,
   type ZodTypeProvider,
 } from 'fastify-type-provider-zod';
-import { sql } from '../src/config/db/connection.ts';
 import { env } from './env.ts';
+import { createQuestionsInRoute } from './http/routes/create-question.ts';
+import { createRoomsRoute } from './http/routes/create-room.ts';
 import { getRoomsRoute } from './http/routes/get-rooms.ts';
+import { getRoomQuestionsRoute } from './http/routes/get-rooms-question.ts';
 
 const app = fastify({ logger: true }).withTypeProvider<ZodTypeProvider>();
 app.register(fastifyCors, {
@@ -22,6 +24,9 @@ app.get('/health', () => {
 });
 
 app.register(getRoomsRoute);
+app.register(createRoomsRoute);
+app.register(getRoomQuestionsRoute);
+app.register(createQuestionsInRoute);
 
 app.listen({ port: env.PORT }).then(() => {
   app.log.info(`HTTP server running on http://localhost:${env.PORT}`);

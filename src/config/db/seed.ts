@@ -10,11 +10,14 @@ await seed(db, schema).refine((result) => {
     rooms: {
       count: 20,
       columns: { name: result.companyName(), description: result.loremIpsum() },
+      with: {
+        questions: 5,
+      },
     },
   };
 });
 
 await sql.end();
 
-// biome-ignore lint/suspicious/noConsole: only used in dev
-console.log('Database seeded successfully!');
+// biome-ignore lint/suspicious/noConsole: used only for dev
+console.log('Database seeded successfully');
