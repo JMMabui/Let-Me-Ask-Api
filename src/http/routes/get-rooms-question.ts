@@ -6,16 +6,16 @@ import { schema } from '../../config/db/schemas/index.ts';
 
 export const getRoomQuestionsRoute: FastifyPluginCallbackZod = (app) => {
   app.get(
-    '/rooms/:roomsId/questions',
+    '/room/:roomId/questions',
     {
       schema: {
         params: z.object({
-          roomsId: z.string(),
+          roomId: z.string(),
         }),
       },
     },
     async (request) => {
-      const { roomsId } = request.params;
+      const { roomId } = request.params;
 
       const result = await db
         .select({
@@ -25,7 +25,7 @@ export const getRoomQuestionsRoute: FastifyPluginCallbackZod = (app) => {
           createdAt: schema.questions.createdAt,
         })
         .from(schema.questions)
-        .where(eq(schema.questions.roomId, roomsId))
+        .where(eq(schema.questions.roomId, roomId))
         .orderBy(desc(schema.questions.createdAt));
 
       return result;

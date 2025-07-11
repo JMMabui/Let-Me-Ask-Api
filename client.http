@@ -32,12 +32,12 @@ Content-Type: application/json
 
 # Get all questions in a room
 # @name getQuestionsInRoom
-GET {{baseUrl}}/rooms/{{roomId}}/questions
+GET {{baseUrl}}/room/{{roomId}}/questions
 
 ###
 # Create a new question in a room
 # @name createQuestionInRoomPOST {{baseUrl}}/rooms
-POST {{baseUrl}}/rooms/{{roomId}}/questions
+POST {{baseUrl}}/room/{{roomId}}/question 
 Accept: application/json
 Content-Type: application/json
 

@@ -15,6 +15,13 @@
       "when": 1752073003585,
       "tag": "0001_grey_mockingbird",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1752166912269,
+      "tag": "0002_nasty_tombstone",
+      "breakpoints": true
     }
   ]
 }

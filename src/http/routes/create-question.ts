@@ -1,12 +1,13 @@
-import { eq } from 'drizzle-orm';
+import { and, eq, sql } from 'drizzle-orm';
 import type { FastifyPluginCallbackZod } from 'fastify-type-provider-zod';
 import { z } from 'zod/v4';
 import { db } from '../../config/db/connection.ts';
 import { schema } from '../../config/db/schemas/index.ts';
+import { generateAnswer, generateEmbeddings } from '../../services/gemini.ts';
 
 export const createQuestionsInRoute: FastifyPluginCallbackZod = (app) => {
   app.post(
-    '/rooms/:roomId/questions',
+    '/room/:roomId/question',
     {
       schema: {
         params: z.object({
@@ -32,19 +33,53 @@ export const createQuestionsInRoute: FastifyPluginCallbackZod = (app) => {
 
       const { question } = request.body;
 
+      const embeddings = generateEmbeddings(question);
+
+      const embeddingsAsStrings = `[${(await embeddings).join(',')}]`;
+
+      const chunks = await db
+        .select({
+          id: schema.audioChuncks.id,
+          transcription: schema.audioChuncks.transcription,
+          similarity: sql<number>`1 - (${schema.audioChuncks.embeddings} <=> ${embeddingsAsStrings}::vector)`,
+        })
+        .from(schema.audioChuncks)
+        .where(
+          and(
+            eq(schema.audioChuncks.roomId, roomId),
+            sql`1-(${schema.audioChuncks.embeddings} <=> ${embeddingsAsStrings}::vector) > 0.7`
+          )
+        )
+        .orderBy(
+          sql`${schema.audioChuncks.embeddings} <=> ${embeddingsAsStrings}::vector`
+        )
+        .limit(3);
+
+      let answer: string | null = null;
+
+      if (chunks.length > 0) {
+        const transcriptions = chunks.map((chunk) => chunk.transcription);
+
+        answer = await generateAnswer(question, transcriptions);
+      }
       const result = await db
         .insert(schema.questions)
         .values({
           roomId,
           question,
+          answer,
         })
         .returning();
 
-      if (!result[0]) {
+      const insertedQuestion = result[0];
+
+      if (!insertedQuestion) {
         throw new Error('Failed to create question');
       }
 
-      return reply.status(201).send({ questionId: result[0].id });
+      return reply
+        .status(201)
+        .send({ questionId: insertedQuestion.id, answer });
     }
   );
 };
